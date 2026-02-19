@@ -1,0 +1,1 @@
+# Szamitogep_Grafika_2026
