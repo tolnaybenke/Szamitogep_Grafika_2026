@@ -7,7 +7,7 @@ typedef struct Camera
 {
     double position[3];
     double rotation[3];
-    double speed[3]; // Sebesség (előre/hátra, oldalra, fel/le - bár a fel/le most nem kell)
+    double speed[3];
     bool is_moving_forward;
     bool is_moving_backward;
     bool is_moving_left;

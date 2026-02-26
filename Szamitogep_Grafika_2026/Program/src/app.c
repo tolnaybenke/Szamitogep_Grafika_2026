@@ -8,7 +8,7 @@ void init_app(App* app, int width, int height)
     SDL_Init(SDL_INIT_VIDEO);
     IMG_Init(IMG_INIT_PNG | IMG_INIT_JPG);
 
-    app->window = SDL_CreateWindow("Feieves Feladat", SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED,
+    app->window = SDL_CreateWindow("Feleves Feladat", SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED,
                                    width, height, SDL_WINDOW_OPENGL | SDL_WINDOW_RESIZABLE);
     app->gl_context = SDL_GL_CreateContext(app->window);
 
@@ -46,6 +46,19 @@ void handle_app_events(App* app)
                     case SDL_SCANCODE_S: app->camera.is_moving_backward = true; break;
                     case SDL_SCANCODE_A: app->camera.is_moving_left = true; break;
                     case SDL_SCANCODE_D: app->camera.is_moving_right = true; break;
+                    case SDL_SCANCODE_F1: 
+                        app->show_help = !app->show_help; // Súgó ki-be kapcsolása 
+                        break;
+                    case SDL_SCANCODE_KP_PLUS: // Numerikus plusz
+                    case SDL_SCANCODE_EQUALS:  // Sima plusz/egyenlőség jel
+                        app->scene.light_intensity += 0.05f;
+                        if (app->scene.light_intensity > 1.0f) app->scene.light_intensity = 1.0f;
+                        break;
+                    case SDL_SCANCODE_KP_MINUS:
+                    case SDL_SCANCODE_MINUS:
+                        app->scene.light_intensity -= 0.05f;
+                        if (app->scene.light_intensity < 0.0f) app->scene.light_intensity = 0.0f;
+                        break;
                     default: break;
                 }
                 break;
@@ -59,17 +72,18 @@ void handle_app_events(App* app)
                 }
                 break;
             case SDL_MOUSEMOTION:
-                // Egér mozgás alapján kamera forgatása
-                app->camera.rotation[1] -= event.motion.xrel * 0.2; // Y tengely (bal/jobb)
-                app->camera.rotation[0] -= event.motion.yrel * 0.2; // X tengely (fel/le nézés)
-                
-                // Korlátozzuk a fel/le nézést, hogy ne forduljon át a kamera
-                if (app->camera.rotation[0] > 89.0) app->camera.rotation[0] = 89.0;
-                if (app->camera.rotation[0] < -89.0) app->camera.rotation[0] = -89.0;
+                // Egér jobbra (+xrel)
+                app->camera.rotation[1] += event.motion.xrel * 0.1; 
+                // Egér le (+yrel)
+                app->camera.rotation[0] += event.motion.yrel * 0.1;
+
+                // Függőleges korlát
+                if (app->camera.rotation[0] > 90.0) app->camera.rotation[0] = 90.0;
+                if (app->camera.rotation[0] < -90.0) app->camera.rotation[0] = -90.0;
                 break;
             case SDL_WINDOWEVENT:
                 if (event.window.event == SDL_WINDOWEVENT_RESIZED) {
-                    // Ablak átméretezésének kezelése (ez elvárás!)
+                    // Ablak átméretezésének kezelése
                     glViewport(0, 0, event.window.data1, event.window.data2);
                     glMatrixMode(GL_PROJECTION);
                     glLoadIdentity();
@@ -95,6 +109,9 @@ void render_app(App* app)
 
     set_view(&(app->camera));
     render_scene(&(app->scene));
+    if (app->show_help) {
+        render_help(&(app->scene));
+    }
 
     SDL_GL_SwapWindow(app->window);
 }

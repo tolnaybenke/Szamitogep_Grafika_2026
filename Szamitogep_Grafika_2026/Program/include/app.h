@@ -11,6 +11,7 @@ typedef struct App
     SDL_Window* window;
     SDL_GLContext gl_context;
     bool is_running;
+    bool show_help;
     double uptime;
     Camera camera;
     Scene scene;

@@ -4,16 +4,23 @@
 
 void init_scene(Scene* scene)
 {
-    // Cseréld le a fájlnevet a saját textúrád útvonalára!
     scene->floor_texture = load_texture("assets/textures/floor.png");
+    scene->help_texture = load_texture("assets/textures/help.png");
+    scene->light_intensity = 0.5f; // Alapértelmezett fényerő
 }
 
 void render_scene(const Scene* scene)
 {
-    // Környezeti fény bekapcsolása a padlóhoz
-    GLfloat ambient_light[] = { 1.0f, 1.0f, 1.0f, 1.0f };
-    glLightModelfv(GL_LIGHT_MODEL_AMBIENT, ambient_light);
+    float light_val = scene->light_intensity;
+    GLfloat light_ambient[] = { light_val, light_val, light_val, 1.0f };
+    GLfloat light_diffuse[] = { light_val, light_val, light_val, 1.0f };
+    GLfloat light_pos[] = { 0.0f, 10.0f, 0.0f, 1.0f };
+
     glEnable(GL_LIGHTING);
+    glEnable(GL_LIGHT0);
+    glLightfv(GL_LIGHT0, GL_AMBIENT, light_ambient);
+    glLightfv(GL_LIGHT0, GL_DIFFUSE, light_diffuse);
+    glLightfv(GL_LIGHT0, GL_POSITION, light_pos);
 
     // Padló kirajzolása (Egy hatalmas, textúrázott négyzet)
     glEnable(GL_TEXTURE_2D);
@@ -28,4 +35,33 @@ void render_scene(const Scene* scene)
     glEnd();
 
     glDisable(GL_TEXTURE_2D);
+}
+
+void render_help(const Scene* scene) {
+    glDisable(GL_LIGHTING); // A súgóhoz nem kell fény
+    glDisable(GL_DEPTH_TEST); // Legyen minden előtt
+    glEnable(GL_TEXTURE_2D);
+
+    glMatrixMode(GL_PROJECTION);
+    glPushMatrix();
+    glLoadIdentity();
+    glOrtho(0, 800, 600, 0, -1, 1); // 2D koordináta-rendszer 
+
+    glMatrixMode(GL_MODELVIEW);
+    glLoadIdentity();
+
+    glBindTexture(GL_TEXTURE_2D, scene->help_texture);
+    glColor3f(1, 1, 1);
+    glBegin(GL_QUADS);
+        glTexCoord2f(0, 0); glVertex2f(0, 0);
+        glTexCoord2f(1, 0); glVertex2f(800, 0);
+        glTexCoord2f(1, 1); glVertex2f(800, 600);
+        glTexCoord2f(0, 1); glVertex2f(0, 600);
+    glEnd();
+
+    glMatrixMode(GL_PROJECTION);
+    glPopMatrix();
+    glMatrixMode(GL_MODELVIEW);
+
+    glEnable(GL_DEPTH_TEST);
 }
