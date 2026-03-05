@@ -1,5 +1,8 @@
 #include "scene.h"
 #include "texture.h"
+#include <obj/load.h>
+#include <obj/draw.h>
+#include <obj/transform.h>
 #include <SDL2/SDL_opengl.h>
 
 void init_scene(Scene* scene)
@@ -7,6 +10,10 @@ void init_scene(Scene* scene)
     scene->floor_texture = load_texture("assets/textures/floor.png");
     scene->help_texture = load_texture("assets/textures/help.png");
     scene->light_intensity = 0.5f; // Alapértelmezett fényerő
+
+    load_model(&(scene->cat_model), "assets/models/Cat.obj");
+    scene->cat_texture = load_texture("assets/textures/Cat.png");
+    scale_model(&(scene->cat_model), 0.2, 0.2, 0.2);
 }
 
 void render_scene(const Scene* scene)
@@ -33,6 +40,13 @@ void render_scene(const Scene* scene)
         glTexCoord2f(50.0f, 50.0f); glVertex3f( 50.0f, 0.0f,  50.0f);
         glTexCoord2f(0.0f, 50.0f);  glVertex3f(-50.0f, 0.0f,  50.0f);
     glEnd();
+    
+    glPushMatrix();
+        glTranslatef(-3.0f, 0.0f, 0.0f); // Elhelyezzük a padlón
+        glRotatef(-90.0f, 1.0f, 0.0f, 0.0f);
+        glBindTexture(GL_TEXTURE_2D, scene->cat_texture);
+        draw_model(&(scene->cat_model));
+    glPopMatrix();
 
     glDisable(GL_TEXTURE_2D);
 }
