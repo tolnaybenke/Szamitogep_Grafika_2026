@@ -49,15 +49,20 @@ void handle_app_events(App* app)
                     case SDL_SCANCODE_F1: 
                         app->show_help = !app->show_help; // Súgó ki-be kapcsolása 
                         break;
-                    case SDL_SCANCODE_KP_PLUS: // Numerikus plusz
-                    case SDL_SCANCODE_EQUALS:  // Sima plusz/egyenlőség jel
-                        app->scene.light_intensity += 0.05f;
-                        if (app->scene.light_intensity > 1.0f) app->scene.light_intensity = 1.0f;
+                    // FÉNYERŐ NÖVELÉSE: Numpad + VAGY PageUp
+                    case SDL_SCANCODE_KP_PLUS:
+                    case SDL_SCANCODE_PAGEUP:
+                        app->scene.light_intensity += 0.1f;
+                        if (app->scene.light_intensity > 1.2f) app->scene.light_intensity = 1.2f;
+                        //printf("Fenyero novelve: %.2f\n", app->scene.light_intensity);
                         break;
+                    
+                    // FÉNYERŐ CSÖKKENTÉSE: Numpad - VAGY PageDown
                     case SDL_SCANCODE_KP_MINUS:
-                    case SDL_SCANCODE_MINUS:
-                        app->scene.light_intensity -= 0.05f;
+                    case SDL_SCANCODE_PAGEDOWN:
+                        app->scene.light_intensity -= 0.1f;
                         if (app->scene.light_intensity < 0.0f) app->scene.light_intensity = 0.0f;
+                        //printf("Fenyero csokkentve: %.2f\n", app->scene.light_intensity);
                         break;
                     default: break;
                 }

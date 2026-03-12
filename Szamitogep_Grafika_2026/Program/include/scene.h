@@ -9,6 +9,9 @@ typedef struct Scene
 {
     GLuint floor_texture;
     GLuint help_texture;
+    GLuint wall_texture;
+    GLuint roof_texture;
+
     float light_intensity;
 
     Model cat_model;

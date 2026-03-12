@@ -7,40 +7,107 @@
 
 void init_scene(Scene* scene)
 {
-    scene->floor_texture = load_texture("assets/textures/floor.png");
     scene->help_texture = load_texture("assets/textures/help.png");
     scene->light_intensity = 0.5f; // Alapértelmezett fényerő
 
     load_model(&(scene->cat_model), "assets/models/Cat.obj");
     scene->cat_texture = load_texture("assets/textures/Cat.png");
-    scale_model(&(scene->cat_model), 0.2, 0.2, 0.2);
+    scale_model(&(scene->cat_model), 0.05, 0.05, 0.05);
+
+    // Textúrák betöltése
+    scene->wall_texture = load_texture("assets/textures/mossy_brick_wall.png");
+    scene->roof_texture = load_texture("assets/textures/roof.png");
+    scene->floor_texture = load_texture("assets/textures/floor.png");
 }
 
 void render_scene(const Scene* scene)
 {
-    float light_val = scene->light_intensity;
-    GLfloat light_ambient[] = { light_val, light_val, light_val, 1.0f };
-    GLfloat light_diffuse[] = { light_val, light_val, light_val, 1.0f };
-    GLfloat light_pos[] = { 0.0f, 10.0f, 0.0f, 1.0f };
+    float val = scene->light_intensity;
+
+    // Fény összetevői
+    GLfloat ambient[] = { val * 0.4f, val * 0.4f, val * 0.4f, 1.0f };
+    GLfloat diffuse[] = { val, val, val, 1.0f };
+    GLfloat specular[] = { 0.0f, 0.0f, 0.0f, 1.0f };
+    GLfloat light_pos[] = { 0.0f, 3.8f, 0.0f, 1.0f };
 
     glEnable(GL_LIGHTING);
     glEnable(GL_LIGHT0);
-    glLightfv(GL_LIGHT0, GL_AMBIENT, light_ambient);
-    glLightfv(GL_LIGHT0, GL_DIFFUSE, light_diffuse);
+
+    glLightfv(GL_LIGHT0, GL_AMBIENT, ambient);
+    glLightfv(GL_LIGHT0, GL_DIFFUSE, diffuse);
+    glLightfv(GL_LIGHT0, GL_SPECULAR, specular);
     glLightfv(GL_LIGHT0, GL_POSITION, light_pos);
 
-    // Padló kirajzolása (Egy hatalmas, textúrázott négyzet)
-    glEnable(GL_TEXTURE_2D);
-    glBindTexture(GL_TEXTURE_2D, scene->floor_texture);
+    // Konstans, lineáris és kvadratikus tompítás beállítása
+    /*glLightf(GL_LIGHT0, GL_CONSTANT_ATTENUATION, 1.0f);
+    glLightf(GL_LIGHT0, GL_LINEAR_ATTENUATION, 0.05f);
+    glLightf(GL_LIGHT0, GL_QUADRATIC_ATTENUATION, 0.01f);*/
 
+    // Anyagjellemzők csillogásának kikapcsolása
+    GLfloat mat_specular[] = { 0.0f, 0.0f, 0.0f, 1.0f };
+    glMaterialfv(GL_FRONT_AND_BACK, GL_SPECULAR, mat_specular);
+    glMaterialf(GL_FRONT_AND_BACK, GL_SHININESS, 0.0f);
+
+    glColor3f(1.0f, 1.0f, 1.0f);
+
+    glEnable(GL_TEXTURE_2D);
+    glTexEnvf(GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_MODULATE); //
+
+    float size = 10.0f;
+    float height = 4.0f;
+
+    // Falak
+    glBindTexture(GL_TEXTURE_2D, scene->wall_texture);
     glBegin(GL_QUADS);
-        // Ismétlődő textúra a padlón (a textúra koordinátákat nagyobbra vesszük)
-        glTexCoord2f(0.0f, 0.0f);   glVertex3f(-50.0f, 0.0f, -50.0f);
-        glTexCoord2f(50.0f, 0.0f);  glVertex3f( 50.0f, 0.0f, -50.0f);
-        glTexCoord2f(50.0f, 50.0f); glVertex3f( 50.0f, 0.0f,  50.0f);
-        glTexCoord2f(0.0f, 50.0f);  glVertex3f(-50.0f, 0.0f,  50.0f);
+        // Hátsó
+        glNormal3f(0.0f, 0.0f, 1.0f);
+        glTexCoord2f(0, 0); glVertex3f(-size, 0, -size);
+        glTexCoord2f(5, 0); glVertex3f( size, 0, -size);
+        glTexCoord2f(5, 2); glVertex3f( size, height, -size);
+        glTexCoord2f(0, 2); glVertex3f(-size, height, -size);
+
+        // Első
+        glNormal3f(0.0f, 0.0f, -1.0f);
+        glTexCoord2f(0, 0); glVertex3f( size, 0, size);
+        glTexCoord2f(5, 0); glVertex3f(-size, 0, size);
+        glTexCoord2f(5, 2); glVertex3f(-size, height, size);
+        glTexCoord2f(0, 2); glVertex3f( size, height, size);
+
+        // Bal
+        glNormal3f(1.0f, 0.0f, 0.0f);
+        glTexCoord2f(0, 0); glVertex3f(-size, 0,  size);
+        glTexCoord2f(5, 0); glVertex3f(-size, 0, -size);
+        glTexCoord2f(5, 2); glVertex3f(-size, height, -size);
+        glTexCoord2f(0, 2); glVertex3f(-size, height,  size);
+
+        // Jobb
+        glNormal3f(-1.0f, 0.0f, 0.0f);
+        glTexCoord2f(0, 0); glVertex3f(size, 0, -size);
+        glTexCoord2f(5, 0); glVertex3f(size, 0,  size);
+        glTexCoord2f(5, 2); glVertex3f(size, height,  size);
+        glTexCoord2f(0, 2); glVertex3f(size, height, -size);
     glEnd();
-    
+
+    // Plafon
+    glBindTexture(GL_TEXTURE_2D, scene->roof_texture);
+    glBegin(GL_QUADS);
+        glNormal3f(0.0f, -1.0f, 0.0f);
+        glTexCoord2f(0, 0); glVertex3f(-size, height, -size);
+        glTexCoord2f(5, 0); glVertex3f( size, height, -size);
+        glTexCoord2f(5, 5); glVertex3f( size, height,  size);
+        glTexCoord2f(0, 5); glVertex3f(-size, height,  size);
+    glEnd();
+
+    // Padló
+    glBindTexture(GL_TEXTURE_2D, scene->floor_texture);
+    glBegin(GL_QUADS);
+        glNormal3f(0.0f, 1.0f, 0.0f);
+        glTexCoord2f(0, 0); glVertex3f(-size, 0, -size);
+        glTexCoord2f(5, 0); glVertex3f( size, 0, -size);
+        glTexCoord2f(5, 5); glVertex3f( size, 0,  size); 
+        glTexCoord2f(0, 5); glVertex3f(-size, 0,  size);
+    glEnd();
+
     glPushMatrix();
         glTranslatef(-3.0f, 0.0f, 0.0f); // Elhelyezzük a padlón
         glRotatef(-90.0f, 1.0f, 0.0f, 0.0f);
