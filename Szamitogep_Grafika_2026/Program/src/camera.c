@@ -25,24 +25,36 @@ void update_camera(Camera* camera, double time)
     double angle = camera->rotation[1] * M_PI / 180.0;
     double speed = 5.0 * time;
 
-    // Előre-hátra mozgás (X és Z tengelyen a yaw szög alapján)
+    double room_limit = 9.8; // 9.8, hogy ne menjünk teljesen bele a falba, hagyjunk 0.2 "testvastagságot"
+
+    double new_x = camera->position[0];
+    double new_z = camera->position[2];
+
     if (camera->is_moving_forward) {
-        camera->position[0] += sin(angle) * speed;
-        camera->position[2] -= cos(angle) * speed;
+        new_x += sin(angle) * speed;
+        new_z -= cos(angle) * speed;
     }
     if (camera->is_moving_backward) {
-        camera->position[0] -= sin(angle) * speed;
-        camera->position[2] += cos(angle) * speed;
+        new_x -= sin(angle) * speed;
+        new_z += cos(angle) * speed;
     }
 
-    // Oldalazás (Strafing) - 90 fokkal eltolt szöggel
     if (camera->is_moving_left) {
-        camera->position[0] -= cos(angle) * speed;
-        camera->position[2] -= sin(angle) * speed;
+        new_x -= cos(angle) * speed;
+        new_z -= sin(angle) * speed;
     }
     if (camera->is_moving_right) {
-        camera->position[0] += cos(angle) * speed;
-        camera->position[2] += sin(angle) * speed;
+        new_x += cos(angle) * speed;
+        new_z += sin(angle) * speed;
+    }
+
+    // --- ÜTKÖZÉSVIZSGÁLAT (COLLISION DETECTION) ---
+    if (new_x > -room_limit && new_x < room_limit) {
+        camera->position[0] = new_x;
+    }
+
+    if (new_z > -room_limit && new_z < room_limit) {
+        camera->position[2] = new_z;
     }
 }
 

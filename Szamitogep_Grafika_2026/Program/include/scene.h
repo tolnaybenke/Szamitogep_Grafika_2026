@@ -14,8 +14,8 @@ typedef struct Scene
 
     float light_intensity;
 
-    Model cat_model;
-    GLuint cat_texture;
+    Model potted_plant_1_model;
+    GLuint potted_plant_1_texture;
 } Scene;
 
 void init_scene(Scene* scene);

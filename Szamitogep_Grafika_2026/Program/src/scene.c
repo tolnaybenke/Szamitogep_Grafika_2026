@@ -10,9 +10,9 @@ void init_scene(Scene* scene)
     scene->help_texture = load_texture("assets/textures/help.png");
     scene->light_intensity = 0.5f; // Alapértelmezett fényerő
 
-    load_model(&(scene->cat_model), "assets/models/Cat.obj");
-    scene->cat_texture = load_texture("assets/textures/Cat.png");
-    scale_model(&(scene->cat_model), 0.05, 0.05, 0.05);
+    load_model(&(scene->potted_plant_1_model), "assets/models/potted_plant_1.obj");
+    scene->potted_plant_1_texture = load_texture("assets/textures/potted_plant_1.png");
+    scale_model(&(scene->potted_plant_1_model), 4, 4, 4);
 
     // Textúrák betöltése
     scene->wall_texture = load_texture("assets/textures/mossy_brick_wall.png");
@@ -110,9 +110,14 @@ void render_scene(const Scene* scene)
 
     glPushMatrix();
         glTranslatef(-3.0f, 0.0f, 0.0f); // Elhelyezzük a padlón
-        glRotatef(-90.0f, 1.0f, 0.0f, 0.0f);
-        glBindTexture(GL_TEXTURE_2D, scene->cat_texture);
-        draw_model(&(scene->cat_model));
+        glRotatef(0.0f, 1.0f, 0.0f, 0.0f);
+        glEnable(GL_ALPHA_TEST);
+        glAlphaFunc(GL_GREATER, 0.1f);
+        //glDisable(GL_CULL_FACE); // Hogy a levelek hátulja is látszódjon
+        glBindTexture(GL_TEXTURE_2D, scene->potted_plant_1_texture);
+        draw_model(&(scene->potted_plant_1_model));
+        //glEnable(GL_CULL_FACE);
+        glDisable(GL_ALPHA_TEST);
     glPopMatrix();
 
     glDisable(GL_TEXTURE_2D);
