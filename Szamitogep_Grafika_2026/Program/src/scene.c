@@ -14,6 +14,18 @@ void init_scene(Scene* scene)
     scene->potted_plant_1_texture = load_texture("assets/textures/potted_plant_1.png");
     scale_model(&(scene->potted_plant_1_model), 4, 4, 4);
 
+    load_model(&(scene->pot_model), "assets/models/pot.obj");
+    scene->pot_texture = load_texture("assets/textures/pot.png");
+    scale_model(&(scene->pot_model), 3, 3, 3);
+    
+    load_model(&(scene->plant_a_model), "assets/models/plant_a.obj");
+    scene->plant_a_texture = load_texture("assets/textures/plant_a.png");
+    scale_model(&(scene->plant_a_model), 1, 1, 1);
+    /*
+    load_model(&(scene->plant_b_model), "assets/models/plant_b.obj");
+    scene->plant_b_texture = load_texture("assets/textures/plant_b.png");
+    scale_model(&(scene->plant_b_model), 4, 4, 4);
+    */
     // Textúrák betöltése
     scene->wall_texture = load_texture("assets/textures/mossy_brick_wall.png");
     scene->roof_texture = load_texture("assets/textures/roof.png");
@@ -56,7 +68,7 @@ void render_scene(const Scene* scene)
     float size = 10.0f;
     float height = 4.0f;
 
-    // Falak
+    // Falak TODO: négyszögekre darabolás
     glBindTexture(GL_TEXTURE_2D, scene->wall_texture);
     glBegin(GL_QUADS);
         // Hátsó
@@ -109,7 +121,7 @@ void render_scene(const Scene* scene)
     glEnd();
 
     glPushMatrix();
-        glTranslatef(-3.0f, 0.0f, 0.0f); // Elhelyezzük a padlón
+        glTranslatef(-7.0f, 0.0f, 7.0f); // Elhelyezzük a padlón
         glRotatef(0.0f, 1.0f, 0.0f, 0.0f);
         glEnable(GL_ALPHA_TEST);
         glAlphaFunc(GL_GREATER, 0.1f);
@@ -118,6 +130,20 @@ void render_scene(const Scene* scene)
         draw_model(&(scene->potted_plant_1_model));
         //glEnable(GL_CULL_FACE);
         glDisable(GL_ALPHA_TEST);
+    glPopMatrix();
+
+    glPushMatrix();
+        glTranslatef(0.0f, 0.0f, 0.0f);
+        glRotatef(0.0f, 1.0f, 0.0f, 0.0f);
+        glBindTexture(GL_TEXTURE_2D, scene->pot_texture);
+        draw_model(&(scene->pot_model));
+    glPopMatrix();
+
+    glPushMatrix();
+        glTranslatef(0.0f, 1.0f, 0.0f);
+        glRotatef(0.0f, 1.0f, 0.0f, 0.0f);
+        glBindTexture(GL_TEXTURE_2D, scene->plant_a_texture);
+        draw_model(&(scene->plant_a_model));
     glPopMatrix();
 
     glDisable(GL_TEXTURE_2D);
