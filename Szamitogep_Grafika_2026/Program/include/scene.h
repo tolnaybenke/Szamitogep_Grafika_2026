@@ -5,6 +5,12 @@
 #include <obj/model.h>
 #include <SDL2/SDL_opengl.h>
 
+typedef struct Pot {
+    float x, z;          // Pozíció a szobában (az y mindig 0, mert a padlón van)
+    int active_plant;    // 0: üres, 1: Növény A, 2: Növény B
+    bool is_selected;    // Épp ki van-e jelölve
+} Pot;
+
 typedef struct Scene
 {
     GLuint floor_texture;
@@ -24,8 +30,7 @@ typedef struct Scene
     GLuint plant_a_texture;
     GLuint plant_b_texture;
 
-    int active_plant; // 0: üres, 1: "A" növény, 2: "B" növény
-    bool is_pot_selected;
+    Pot pots[4];
 } Scene;
 
 void init_scene(Scene* scene);

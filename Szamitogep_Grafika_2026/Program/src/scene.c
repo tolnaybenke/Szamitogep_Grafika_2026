@@ -13,7 +13,7 @@ void init_scene(Scene* scene)
     load_model(&(scene->potted_plant_1_model), "assets/models/potted_plant_1.obj");
     scene->potted_plant_1_texture = load_texture("assets/textures/potted_plant_1.png");
     scale_model(&(scene->potted_plant_1_model), 4, 4, 4);
-
+    
     load_model(&(scene->pot_model), "assets/models/pot.obj");
     scene->pot_texture = load_texture("assets/textures/pot.png");
     scale_model(&(scene->pot_model), 3, 3, 3);
@@ -21,15 +21,29 @@ void init_scene(Scene* scene)
     load_model(&(scene->plant_a_model), "assets/models/plant_a.obj");
     scene->plant_a_texture = load_texture("assets/textures/plant_a.png");
     scale_model(&(scene->plant_a_model), 1, 1, 1);
-    /*
+    
     load_model(&(scene->plant_b_model), "assets/models/plant_b.obj");
     scene->plant_b_texture = load_texture("assets/textures/plant_b.png");
-    scale_model(&(scene->plant_b_model), 4, 4, 4);
-    */
+    scale_model(&(scene->plant_b_model), 1, 1, 1);
+    
     // Textúrák betöltése
     scene->wall_texture = load_texture("assets/textures/mossy_brick_wall.png");
     scene->roof_texture = load_texture("assets/textures/roof.png");
     scene->floor_texture = load_texture("assets/textures/floor.png");
+
+    // 1. Északi fal
+    scene->pots[0].x = 0.0f; scene->pots[0].z = -9.0f;
+    // 2. Déli fal
+    scene->pots[1].x = 0.0f; scene->pots[1].z = 9.0f;
+    // 3. Keleti fal
+    scene->pots[2].x = 9.0f; scene->pots[2].z = 0.0f;
+    // 4. Nyugati fal
+    scene->pots[3].x = -9.0f; scene->pots[3].z = 0.0f;
+
+    for (int i = 0; i < 4; i++) {
+        scene->pots[i].active_plant = 0;
+        scene->pots[i].is_selected = false;
+    }
 }
 
 void render_scene(const Scene* scene)
@@ -131,7 +145,7 @@ void render_scene(const Scene* scene)
         //glEnable(GL_CULL_FACE);
         glDisable(GL_ALPHA_TEST);
     glPopMatrix();
-
+    /*
     glPushMatrix();
         glTranslatef(0.0f, 0.0f, 0.0f);
         glRotatef(0.0f, 1.0f, 0.0f, 0.0f);
@@ -145,6 +159,43 @@ void render_scene(const Scene* scene)
         glBindTexture(GL_TEXTURE_2D, scene->plant_a_texture);
         draw_model(&(scene->plant_a_model));
     glPopMatrix();
+    */
+
+    for (int i = 0; i < 4; i++) {
+        glPushMatrix();
+            glTranslatef(scene->pots[i].x, 0.0f, scene->pots[i].z);
+
+            // Ha ki van jelölve, kapjon egy pirosas fényt!
+            if (scene->pots[i].is_selected) {
+                glMaterialfv(GL_FRONT, GL_EMISSION, (float[]){0.4f, 0.0f, 0.0f, 1.0f});
+            }
+
+            // 1. Üres cserép rajzolása
+            glBindTexture(GL_TEXTURE_2D, scene->pot_texture);
+            draw_model(&(scene->pot_model));
+            
+            // Fényvisszaadás alapállapotba
+            glMaterialfv(GL_FRONT, GL_EMISSION, (float[]){0.0f, 0.0f, 0.0f, 1.0f});
+
+            // 2. Növény rajzolása, ha van benne
+            if (scene->pots[i].active_plant > 0) {
+                glEnable(GL_ALPHA_TEST);
+                glAlphaFunc(GL_GREATER, 0.1f);
+
+                if (scene->pots[i].active_plant == 1) {
+                    glTranslatef(0.0f, 1.0f, 0.0f);
+                    glBindTexture(GL_TEXTURE_2D, scene->plant_a_texture);
+                    draw_model(&(scene->plant_a_model));
+                } else if (scene->pots[i].active_plant == 2) {
+                    glTranslatef(0.0f, 1.0f, 0.0f);
+                    glBindTexture(GL_TEXTURE_2D, scene->plant_b_texture);
+                    draw_model(&(scene->plant_b_model));
+                }
+
+                glDisable(GL_ALPHA_TEST);
+            }
+        glPopMatrix();
+    }
 
     glDisable(GL_TEXTURE_2D);
 }
