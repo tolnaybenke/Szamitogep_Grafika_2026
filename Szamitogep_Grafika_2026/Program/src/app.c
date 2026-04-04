@@ -2,7 +2,9 @@
 #include <SDL2/SDL_image.h>
 #include <SDL2/SDL_opengl.h>
 #include <GL/glu.h>
+#include <stdio.h>
 #include <math.h>
+#include <stdlib.h>
 
 void perform_raycast(App* app, int mouse_x, int mouse_y) {
     GLint viewport[4];
@@ -151,6 +153,10 @@ void handle_app_events(App* app)
                         if (app->scene.light_intensity < 0.0f) app->scene.light_intensity = 0.0f;
                         //printf("Fenyero csokkentve: %.2f\n", app->scene.light_intensity);
                         break;
+                    case SDL_SCANCODE_R: // R gomb megnyomására elindul az öntözés
+                        app->scene.watering_timer = 10.0; // 10 másodpercig tartson
+                        printf("Ontozorendszer bekapcsolva!\n");
+                        break;
                     default: break;
                 }
                 break;
@@ -193,6 +199,7 @@ void update_app(App* app)
     app->uptime = current_time;
 
     update_camera(&(app->camera), dt);
+    update_scene(&(app->scene), dt);
 }
 
 void render_app(App* app)
