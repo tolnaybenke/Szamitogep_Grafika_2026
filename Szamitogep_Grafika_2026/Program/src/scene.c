@@ -5,6 +5,7 @@
 #include <obj/draw.h>
 #include <obj/transform.h>
 #include <SDL2/SDL_opengl.h>
+#include <GL/freeglut.h> //HUD-szöveghez
 
 void init_scene(Scene* scene)
 {
@@ -41,24 +42,50 @@ void init_scene(Scene* scene)
     // 4. Nyugati fal (-9, 0)
     scene->pots[3].x = -9.0f; scene->pots[3].z = 0.0f;
 
+    scene->selected_pot_index = -1;
+    
     for (int i = 0; i < 4; i++) {
         scene->pots[i].active_plant = 0;
         scene->pots[i].is_selected = false;
     }
 
     scene->watering_timer = 0.0;
+    scene->fog_density = 0.0f;
 
     for (int i = 0; i < MAX_WATER_DROPS; i++) {
-        // Véletlenszerű helyek a plafon alatt (y=3.8 környékén)
-        scene->drops[i].x = (float)(rand() % 2000) / 100.0f - 10.0f; // -10 és 10 között
-        scene->drops[i].z = (float)(rand() % 2000) / 100.0f - 10.0f;
-        scene->drops[i].y = 4.0f + (float)(rand() % 400) / 100.0f;   // Kicsit a plafon felett indulnak
-        scene->drops[i].speed = 2.0f + (float)(rand() % 300) / 100.0f; // Eltérő esési sebesség
+        // Megnézzük, melyik cseréphez tartozik a csepp (0, 1, 2 vagy 3)
+        int pot_index = i % 4; 
+
+        // A cserép X és Z koordinátája + egy pici véletlen szórás (-0.5 és 0.5 között)
+        float offset_x = ((float)(rand() % 100) / 100.0f) - 0.5f;
+        float offset_z = ((float)(rand() % 100) / 100.0f) - 0.5f;
+
+        scene->drops[i].x = scene->pots[pot_index].x + offset_x;
+        scene->drops[i].z = scene->pots[pot_index].z + offset_z;
+        
+        // Magasság: a plafon (4.0) felett különböző pontokon kezdjenek
+        scene->drops[i].y = 4.0f + (float)(rand() % 400) / 100.0f;
+        scene->drops[i].speed = 3.0f + (float)(rand() % 400) / 100.0f;
     }
 }
 
 void render_scene(const Scene* scene)
 {
+    // --- KÖD BEÁLLÍTÁSA ---
+    if (scene->fog_density > 0.0f) {
+        glEnable(GL_FOG);
+        //glFogi(GL_FOG_MODE, GL_EXP2); // Realisztikusabb, négyzetes sűrűség kicsit furcsán néz ki
+        
+        // Köd színe: világosszürke/kissé kékes (mint a pára)
+        GLfloat fog_color[] = { 0.7f, 0.7f, 0.8f, 1.0f };
+        glFogfv(GL_FOG_COLOR, fog_color);
+        
+        glFogf(GL_FOG_DENSITY, scene->fog_density);
+        glHint(GL_FOG_HINT, GL_NICEST); // Legszebb minőség
+    } else {
+        glDisable(GL_FOG);
+    }
+
     float val = scene->light_intensity;
 
     // Fény összetevői
@@ -228,12 +255,12 @@ void render_scene(const Scene* scene)
 
         glBegin(GL_LINES);
         for (int i = 0; i < MAX_WATER_DROPS; i++) {
-            // A víz színe legyen világoskék, némi átlátszósággal
-            glColor4f(0.5f, 0.5f, 1.0f, 0.8f);
+            // Váltakozó kék árnyalatok
+            if (i % 2 == 0) glColor3f(0.4f, 0.4f, 1.0f);
+            else glColor3f(0.6f, 0.6f, 1.0f);
             
-            // Egy rövid függőleges vonal (a csepp)
             glVertex3f(scene->drops[i].x, scene->drops[i].y, scene->drops[i].z);
-            glVertex3f(scene->drops[i].x, scene->drops[i].y - 0.1f, scene->drops[i].z);
+            glVertex3f(scene->drops[i].x, scene->drops[i].y - 0.15f, scene->drops[i].z);
         }
         glEnd();
 
@@ -241,22 +268,43 @@ void render_scene(const Scene* scene)
         glEnable(GL_TEXTURE_2D);
     }
 
+    draw_hud(scene);
+
     glDisable(GL_TEXTURE_2D);
 }
 
 void update_scene(Scene* scene, double dt) {
-    // Ha fut az öntözés (az időzítő pozitív)
     if (scene->watering_timer > 0.0) {
         scene->watering_timer -= dt;
 
-        for (int i = 0; i < MAX_WATER_DROPS; i++) {
-            scene->drops[i].y -= scene->drops[i].speed * dt;
+        // Ha megy az öntözés, fokozatosan növeljük a sűrűséget 0.15-ig
+        if (scene->fog_density < 0.08f) {
+            scene->fog_density += (float)dt * 0.01f; // Sebesség, amivel ködösödik
+        }
 
-            // Ha leért a földre (y < 0), visszaugrik a tetejére
+        for (int i = 0; i < MAX_WATER_DROPS; i++) {
+            scene->drops[i].y -= scene->drops[i].speed * (float)dt;
+
+            // Ha leért a földre
             if (scene->drops[i].y < 0.0f) {
+                int pot_index = i % 4; // Ugyanaz a logika, mint az initnél
+                
+                // Újra a plafonra tesszük
                 scene->drops[i].y = 4.0f;
+                
+                // Opcionális: minden körben kicsit változtathatjuk a szórást a cserép felett
+                float offset_x = ((float)(rand() % 100) / 100.0f) - 0.5f;
+                float offset_z = ((float)(rand() % 100) / 100.0f) - 0.5f;
+                scene->drops[i].x = scene->pots[pot_index].x + offset_x;
+                scene->drops[i].z = scene->pots[pot_index].z + offset_z;
             }
         }
+    } else {
+        // Ha nem megy az öntözés, a köd lassan elszáll 0-ig
+        if (scene->fog_density > 0.0f) {
+            scene->fog_density -= (float)dt * 0.02f; // Lassabban oszlik el, mint ahogy jön
+        }
+        if (scene->fog_density < 0.0f) scene->fog_density = 0.0f;
     }
 }
 
@@ -287,4 +335,56 @@ void render_help(const Scene* scene) {
     glMatrixMode(GL_MODELVIEW);
 
     glEnable(GL_DEPTH_TEST);
+}
+
+void draw_hud(const Scene* scene) {
+    // 1. Átváltunk 2D módba
+    glMatrixMode(GL_PROJECTION);
+    glPushMatrix();
+    glLoadIdentity();
+    gluOrtho2D(0, 800, 600, 0); // Fix 800x600-as HUD koordináták
+
+    glMatrixMode(GL_MODELVIEW);
+    glPushMatrix();
+    glLoadIdentity();
+
+    // 2. Kikapcsoljuk a 3D-s dolgokat, hogy a szöveg tiszta legyen
+    glDisable(GL_LIGHTING);
+    glDisable(GL_FOG);
+    glDisable(GL_DEPTH_TEST);
+    glDisable(GL_TEXTURE_2D);
+
+    // 3. Szöveg összeállítása
+    if (scene->selected_pot_index != -1) {
+        int p_type = scene->pots[scene->selected_pot_index].active_plant;
+        char* plant_name;
+        
+        if (p_type == 1) plant_name = "Kaktusz";
+        else if (p_type == 2) plant_name = "Gyom";
+        else plant_name = "Ures";
+
+        char status_text[50];
+        sprintf(status_text, "Kijelolt pot: %d | Tartalom: %s", scene->selected_pot_index + 1, plant_name);
+
+        // Szöveg színe (legyen sárga vagy fehér, hogy látszódjon a ködben is)
+        glColor3f(1.0f, 1.0f, 0.0f);
+        
+        // Szöveg pozíciója (bal felső sarok)
+        glRasterPos2i(20, 30);
+
+        // Kiírás karakterenként
+        for (char* c = status_text; *c != '\0'; c++) {
+            glutBitmapCharacter(GLUT_BITMAP_HELVETICA_18, *c);
+        }
+    }
+
+    // 4. Mátrixok és állapotok visszaállítása
+    glEnable(GL_DEPTH_TEST);
+    glEnable(GL_LIGHTING);
+    glEnable(GL_TEXTURE_2D);
+
+    glPopMatrix();
+    glMatrixMode(GL_PROJECTION);
+    glPopMatrix();
+    glMatrixMode(GL_MODELVIEW);
 }

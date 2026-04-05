@@ -49,6 +49,7 @@ void perform_raycast(App* app, int mouse_x, int mouse_y) {
 
     // --- Metszésvizsgálat a 4 cserép képzeletbeli gömbjével ---
     double bounding_radius = 2.0; // A cserép befoglaló sugara (állítsd be a modeled méretétől függően)
+    app->scene.selected_pot_index = -1;
 
     for (int i = 0; i < 4; i++) {
         app->scene.pots[i].is_selected = false; // Töröljük az előző kijelöléseket
@@ -68,6 +69,7 @@ void perform_raycast(App* app, int mouse_x, int mouse_y) {
         // Ha a diszkrimináns > 0, akkor a sugár eltalálta a cserepet!
         if (discriminant > 0) {
             app->scene.pots[i].is_selected = true;
+            app->scene.selected_pot_index = i;
             printf("Cserep %d kijelolve!\n", i+1);
         }
     }

@@ -25,6 +25,7 @@ typedef struct Scene
     GLuint roof_texture;
 
     float light_intensity;
+    float fog_density;
 
     Model potted_plant_1_model;
     Model pot_model;
@@ -37,12 +38,14 @@ typedef struct Scene
     GLuint plant_b_texture;
 
     Pot pots[4];
+    int selected_pot_index; // HUD-hoz kell
     WaterDrop drops[MAX_WATER_DROPS];
     double watering_timer;
 } Scene;
 
 void init_scene(Scene* scene);
 void render_scene(const Scene* scene);
+void draw_hud(const Scene* scene);
 void render_help(const Scene* scene);
 
 #endif /* SCENE_H */

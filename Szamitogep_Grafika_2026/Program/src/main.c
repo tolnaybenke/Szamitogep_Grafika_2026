@@ -1,7 +1,12 @@
 #include "app.h"
+#include <GL/freeglut.h>
+#include <locale.h>
 
 int main(int argc, char* argv[])
 {
+    glutInit(&argc, argv);
+    setlocale(LC_NUMERIC, "C");
+
     App app;
     
     init_app(&app, 800, 600);
