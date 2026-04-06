@@ -119,57 +119,74 @@ void render_scene(const Scene* scene)
 
     float size = 10.0f;
     float height = 4.0f;
+    float step = 0.5f; // A négyszögek mérete: minél kisebb, annál szebb a fény (és lassabb a program). 0.5f egy jó középút.
 
-    // Falak TODO: négyszögekre darabolás
+    // 1. Falak: Körbefordulunk a szobában 90 fokos lépésekben
     glBindTexture(GL_TEXTURE_2D, scene->wall_texture);
-    glBegin(GL_QUADS);
-        // Hátsó
-        glNormal3f(0.0f, 0.0f, 1.0f);
-        glTexCoord2f(0, 0); glVertex3f(-size, 0, -size);
-        glTexCoord2f(5, 0); glVertex3f( size, 0, -size);
-        glTexCoord2f(5, 2); glVertex3f( size, height, -size);
-        glTexCoord2f(0, 2); glVertex3f(-size, height, -size);
+    for (int wall = 0; wall < 4; wall++) {
+        glPushMatrix();
+            glRotatef(wall * 90.0f, 0.0f, 1.0f, 0.0f); // Beállítjuk az aktuális fal irányát
+            glNormal3f(0.0f, 0.0f, 1.0f); // A normálvektor mindig a fal felületére merőleges (a tengely forgatása miatt működik így)
+            
+            glBegin(GL_QUADS);
+            for (float x = -size; x < size; x += step) {
+                for (float y = 0; y < height; y += step) {
+                    
+                    // Textúra koordináták arányosítása a falfelületen
+                    // Az ismétlési faktorokat (pl. 5, 2) a ciklusokon belül tartjuk folyamatosnak
+                    float tx1 = ((x + size) / (2 * size)) * 5.0f; 
+                    float tx2 = ((x + step + size) / (2 * size)) * 5.0f;
+                    float ty1 = (y / height) * 2.0f;
+                    float ty2 = ((y + step) / height) * 2.0f;
 
-        // Első
-        glNormal3f(0.0f, 0.0f, -1.0f);
-        glTexCoord2f(0, 0); glVertex3f( size, 0, size);
-        glTexCoord2f(5, 0); glVertex3f(-size, 0, size);
-        glTexCoord2f(5, 2); glVertex3f(-size, height, size);
-        glTexCoord2f(0, 2); glVertex3f( size, height, size);
+                    glTexCoord2f(tx1, ty1); glVertex3f(x, y, -size);
+                    glTexCoord2f(tx2, ty1); glVertex3f(x + step, y, -size);
+                    glTexCoord2f(tx2, ty2); glVertex3f(x + step, y + step, -size);
+                    glTexCoord2f(tx1, ty2); glVertex3f(x, y + step, -size);
+                }
+            }
+            glEnd();
+        glPopMatrix();
+    }
 
-        // Bal
-        glNormal3f(1.0f, 0.0f, 0.0f);
-        glTexCoord2f(0, 0); glVertex3f(-size, 0,  size);
-        glTexCoord2f(5, 0); glVertex3f(-size, 0, -size);
-        glTexCoord2f(5, 2); glVertex3f(-size, height, -size);
-        glTexCoord2f(0, 2); glVertex3f(-size, height,  size);
-
-        // Jobb
-        glNormal3f(-1.0f, 0.0f, 0.0f);
-        glTexCoord2f(0, 0); glVertex3f(size, 0, -size);
-        glTexCoord2f(5, 0); glVertex3f(size, 0,  size);
-        glTexCoord2f(5, 2); glVertex3f(size, height,  size);
-        glTexCoord2f(0, 2); glVertex3f(size, height, -size);
-    glEnd();
-
-    // Plafon
+    // 2. Plafon (Y=4.0): X és Z tengelyeken darabolunk
     glBindTexture(GL_TEXTURE_2D, scene->roof_texture);
+    glNormal3f(0.0f, -1.0f, 0.0f); // Lefelé mutat
     glBegin(GL_QUADS);
-        glNormal3f(0.0f, -1.0f, 0.0f);
-        glTexCoord2f(0, 0); glVertex3f(-size, height, -size);
-        glTexCoord2f(5, 0); glVertex3f( size, height, -size);
-        glTexCoord2f(5, 5); glVertex3f( size, height,  size);
-        glTexCoord2f(0, 5); glVertex3f(-size, height,  size);
+    for (float x = -size; x < size; x += step) {
+        for (float z = -size; z < size; z += step) {
+            
+            float tx1 = ((x + size) / (2 * size)) * 5.0f;
+            float tx2 = ((x + step + size) / (2 * size)) * 5.0f;
+            float ty1 = ((z + size) / (2 * size)) * 5.0f; // Itt ty1 a Z-tengelyt jelöli
+            float ty2 = ((z + step + size) / (2 * size)) * 5.0f;
+
+            glTexCoord2f(tx1, ty1); glVertex3f(x, height, z);
+            glTexCoord2f(tx2, ty1); glVertex3f(x + step, height, z);
+            glTexCoord2f(tx2, ty2); glVertex3f(x + step, height, z + step);
+            glTexCoord2f(tx1, ty2); glVertex3f(x, height, z + step);
+        }
+    }
     glEnd();
 
-    // Padló
+    // 3. Padló (Y=0.0): X és Z tengelyeken darabolunk
     glBindTexture(GL_TEXTURE_2D, scene->floor_texture);
+    glNormal3f(0.0f, 1.0f, 0.0f); // Felfelé mutat
     glBegin(GL_QUADS);
-        glNormal3f(0.0f, 1.0f, 0.0f);
-        glTexCoord2f(0, 0); glVertex3f(-size, 0, -size);
-        glTexCoord2f(5, 0); glVertex3f( size, 0, -size);
-        glTexCoord2f(5, 5); glVertex3f( size, 0,  size); 
-        glTexCoord2f(0, 5); glVertex3f(-size, 0,  size);
+    for (float x = -size; x < size; x += step) {
+        for (float z = -size; z < size; z += step) {
+            
+            float tx1 = ((x + size) / (2 * size)) * 5.0f;
+            float tx2 = ((x + step + size) / (2 * size)) * 5.0f;
+            float ty1 = ((z + size) / (2 * size)) * 5.0f;
+            float ty2 = ((z + step + size) / (2 * size)) * 5.0f;
+
+            glTexCoord2f(tx1, ty1); glVertex3f(x, 0.0f, z);
+            glTexCoord2f(tx2, ty1); glVertex3f(x + step, 0.0f, z);
+            glTexCoord2f(tx2, ty2); glVertex3f(x + step, 0.0f, z + step);
+            glTexCoord2f(tx1, ty2); glVertex3f(x, 0.0f, z + step);
+        }
+    }
     glEnd();
 
     glPushMatrix();
