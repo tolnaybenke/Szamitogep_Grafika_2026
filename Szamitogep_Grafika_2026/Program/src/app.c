@@ -11,31 +11,25 @@ void perform_raycast(App* app, int mouse_x, int mouse_y) {
     GLdouble modelview[16], projection[16];
     GLdouble posX1, posY1, posZ1, posX2, posY2, posZ2;
 
-    // Lekérjük a képernyő méreteit
     glGetIntegerv(GL_VIEWPORT, viewport);
 
-    // --- Mátrixok ideiglenes beállítása a visszavetítéshez ---
     glMatrixMode(GL_PROJECTION);
     glPushMatrix();
     glLoadIdentity();
-    gluPerspective(60.0, (double)viewport[2] / (double)viewport[3], 0.1, 100.0); // FIGYELEM: Ennek egyeznie kell a camera.c-ben lévő beállításoddal!
+    gluPerspective(60.0, (double)viewport[2] / (double)viewport[3], 0.1, 100.0);
     glGetDoublev(GL_PROJECTION_MATRIX, projection);
     glPopMatrix();
 
     glMatrixMode(GL_MODELVIEW);
     glPushMatrix();
     glLoadIdentity();
-    set_view(&(app->camera)); // Beállítjuk a kamerát, mintha rajzolnánk
+    set_view(&(app->camera));
     glGetDoublev(GL_MODELVIEW_MATRIX, modelview);
     glPopMatrix();
-    // --------------------------------------------------------
 
-    // Egér Y koordinátájának megfordítása (mert a képernyőn Y lefelé nő, OpenGL-ben felfelé)
     float winY = (float)viewport[3] - (float)mouse_y;
 
-    // Sugár kezdőpontja (Közeli vágósík)
     gluUnProject(mouse_x, winY, 0.0, modelview, projection, viewport, &posX1, &posY1, &posZ1);
-    // Sugár végpontja (Távoli vágósík)
     gluUnProject(mouse_x, winY, 1.0, modelview, projection, viewport, &posX2, &posY2, &posZ2);
 
     // Sugár irányvektora
@@ -48,7 +42,7 @@ void perform_raycast(App* app, int mouse_x, int mouse_y) {
     dirX /= length; dirY /= length; dirZ /= length;
 
     // --- Metszésvizsgálat a 4 cserép képzeletbeli gömbjével ---
-    double bounding_radius = 2.0; // A cserép befoglaló sugara (állítsd be a modeled méretétől függően)
+    double bounding_radius = 2.0;
     app->scene.selected_pot_index = -1;
 
     for (int i = 0; i < 4; i++) {
@@ -84,16 +78,13 @@ void init_app(App* app, int width, int height)
                                    width, height, SDL_WINDOW_OPENGL | SDL_WINDOW_RESIZABLE);
     app->gl_context = SDL_GL_CreateContext(app->window);
 
-    // OpenGL beállítások
     glEnable(GL_DEPTH_TEST);
-    glClearColor(0.5f, 0.7f, 1.0f, 1.0f); // Égbolt színe
+    glClearColor(0.5f, 0.7f, 1.0f, 1.0f);
 
-    // Projekció beállítása
     glMatrixMode(GL_PROJECTION);
     glLoadIdentity();
     gluPerspective(60.0, (double)width / (double)height, 0.1, 1000.0);
 
-    // Egér elrejtése és ablakhoz rögzítése a forgatáshoz
     SDL_SetRelativeMouseMode(SDL_TRUE);
 
     init_camera(&(app->camera));
@@ -113,7 +104,6 @@ void handle_app_events(App* app)
                 break;
             case SDL_MOUSEBUTTONDOWN:
                 if (event.button.button == SDL_BUTTON_LEFT) {
-                    // Bal klikk esetén meghívjuk a raycastingot az egér X, Y koordinátáival
                     perform_raycast(app, event.button.x, event.button.y);
                 }
                 break;
@@ -137,18 +127,14 @@ void handle_app_events(App* app)
                     case SDL_SCANCODE_A: app->camera.is_moving_left = true; break;
                     case SDL_SCANCODE_D: app->camera.is_moving_right = true; break;
                     case SDL_SCANCODE_F1: 
-                        app->show_help = !app->show_help; // Súgó ki-be kapcsolása 
+                        app->show_help = !app->show_help;
                         break;
-
-                    // FÉNYERŐ NÖVELÉSE: Numpad + VAGY PageUp
                     case SDL_SCANCODE_KP_PLUS:
                     case SDL_SCANCODE_PAGEUP:
                         app->scene.light_intensity += 0.1f;
                         if (app->scene.light_intensity > 1.2f) app->scene.light_intensity = 1.2f;
                         //printf("Fenyero novelve: %.2f\n", app->scene.light_intensity);
                         break;
-                    
-                    // FÉNYERŐ CSÖKKENTÉSE: Numpad - VAGY PageDown
                     case SDL_SCANCODE_KP_MINUS:
                     case SDL_SCANCODE_PAGEDOWN:
                         app->scene.light_intensity -= 0.1f;
@@ -156,7 +142,7 @@ void handle_app_events(App* app)
                         //printf("Fenyero csokkentve: %.2f\n", app->scene.light_intensity);
                         break;
                     case SDL_SCANCODE_R: // R gomb megnyomására elindul az öntözés
-                        app->scene.watering_timer = 10.0; // 10 másodpercig tartson
+                        app->scene.watering_timer = 10.0;
                         printf("Ontozorendszer bekapcsolva!\n");
                         break;
                     default: break;
@@ -172,9 +158,7 @@ void handle_app_events(App* app)
                 }
                 break;
             case SDL_MOUSEMOTION:
-                // Egér jobbra (+xrel)
                 app->camera.rotation[1] += event.motion.xrel * 0.1; 
-                // Egér le (+yrel)
                 app->camera.rotation[0] += event.motion.yrel * 0.1;
 
                 // Függőleges korlát
@@ -183,7 +167,6 @@ void handle_app_events(App* app)
                 break;
             case SDL_WINDOWEVENT:
                 if (event.window.event == SDL_WINDOWEVENT_RESIZED) {
-                    // Ablak átméretezésének kezelése
                     glViewport(0, 0, event.window.data1, event.window.data2);
                     glMatrixMode(GL_PROJECTION);
                     glLoadIdentity();

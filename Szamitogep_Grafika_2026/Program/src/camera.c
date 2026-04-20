@@ -7,7 +7,7 @@
 void init_camera(Camera* camera)
 {
     camera->position[0] = 0.0;
-    camera->position[1] = 2.0; // Szemmagasság
+    camera->position[1] = 2.0;
     camera->position[2] = 5.0;
 
     camera->rotation[0] = 0.0;
@@ -25,7 +25,7 @@ void update_camera(Camera* camera, double time)
     double angle = camera->rotation[1] * M_PI / 180.0;
     double speed = 5.0 * time;
 
-    double room_limit = 9.8; // 9.8, hogy ne menjünk teljesen bele a falba, hagyjunk 0.2 "testvastagságot"
+    double room_limit = 9.8;
 
     double new_x = camera->position[0];
     double new_z = camera->position[2];
@@ -63,10 +63,8 @@ void set_view(const Camera* camera)
     glMatrixMode(GL_MODELVIEW);
     glLoadIdentity();
 
-    // A forgatások sorrendje és iránya
-    glRotatef(camera->rotation[0], 1.0, 0, 0); // Pitch
-    glRotatef(camera->rotation[1], 0, 1.0, 0); // Yaw
+    glRotatef(camera->rotation[0], 1.0, 0, 0);
+    glRotatef(camera->rotation[1], 0, 1.0, 0);
     
-    // A világot mozgatjuk a kamerához képest negatív irányba
     glTranslatef(-camera->position[0], -camera->position[1], -camera->position[2]);
 }
