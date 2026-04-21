@@ -64,7 +64,7 @@ A szimulátor az alábbi billentyűkkel és interakciókkal vezérelhető:
 A projekt fordítása a mellékelt `Makefile` segítségével történik:
 
 1.  Nyisd meg a terminált a projekt gyökérmappájában.
-2.  Töltsd le az asseteket a következő linken:
+2.  Töltsd le az asseteket a következő linken: https://mega.nz/folder/r7IwUBKC#zRd5AnZx5Hh7EvLUOE8vWQ
 3.  Fordítsd le a projektet:
     ```bash
     make
